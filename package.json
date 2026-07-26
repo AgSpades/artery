@@ -8,7 +8,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "node --test public/pcm16-worklet.test.js src/lib/concepts/repository.test.ts src/lib/recovery/reducer.test.ts src/lib/recovery/validation.test.ts src/lib/sarvam/audio.test.ts src/lib/sarvam/chat.test.ts src/lib/schemas.test.ts src/lib/voice/contracts.test.ts"
+    "test": "node --test public/pcm16-worklet.test.js src/lib/concepts/repository.test.ts src/lib/recovery/reducer.test.ts src/lib/recovery/validation.test.ts src/lib/sarvam/audio.test.ts src/lib/sarvam/chat.test.ts src/lib/sarvam/retry.test.ts src/lib/schemas.test.ts src/lib/voice/contracts.test.ts"
   },
   "dependencies": {
     "@vercel/functions": "^3.7.6",
