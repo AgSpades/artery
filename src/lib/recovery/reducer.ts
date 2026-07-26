@@ -1,16 +1,49 @@
 import type { Diagnosis, RecoveryStage, RecoveryWriteback } from "../types.ts";
 
+export type VoiceStatus =
+  | "permission_required"
+  | "connecting"
+  | "mentor_speaking"
+  | "listening"
+  | "processing"
+  | "reconnecting"
+  | "fallback"
+  | "ended";
+
+export type ConversationTurn = {
+  speaker: "learner" | "mentor";
+  text: string;
+  englishSubtitle?: string;
+  interrupted?: boolean;
+  turnType?: "initial_reasoning" | "clarification" | "self_correction";
+};
+
 export type RecoveryState = {
   stage: RecoveryStage;
+  voiceStatus: VoiceStatus;
+  turns: ConversationTurn[];
   transcript: string;
   diagnosis?: Diagnosis;
   writeback?: RecoveryWriteback;
   verificationAttempts: number;
   error?: string;
   resumeStage?: RecoveryStage;
+  selfCorrectionPending?: boolean;
 };
 
 export type RecoveryAction =
+  | { type: "START_CONVERSATION" }
+  | { type: "VOICE_READY" }
+  | { type: "VOICE_RECONNECTING" }
+  | { type: "VOICE_FALLBACK" }
+  | {
+      type: "START_MENTOR_REPLY";
+      text: string;
+      englishSubtitle?: string;
+    }
+  | { type: "MENTOR_REPLY_FINISHED" }
+  | { type: "SPEECH_STARTED" }
+  | { type: "TURN_TRANSCRIPT"; transcript: string }
   | { type: "START_RECORDING" }
   | { type: "START_TRANSCRIPTION" }
   | { type: "TRANSCRIPT_READY"; transcript: string }
@@ -29,6 +62,8 @@ export type RecoveryAction =
 
 export const initialRecoveryState: RecoveryState = {
   stage: "idle",
+  voiceStatus: "permission_required",
+  turns: [],
   transcript: "",
   verificationAttempts: 0,
 };
@@ -38,6 +73,65 @@ export function recoveryReducer(
   action: RecoveryAction,
 ): RecoveryState {
   switch (action.type) {
+    case "START_CONVERSATION":
+      return { ...state, voiceStatus: "connecting", error: undefined };
+    case "VOICE_READY":
+      return { ...state, voiceStatus: "listening", error: undefined };
+    case "VOICE_RECONNECTING":
+      return { ...state, voiceStatus: "reconnecting" };
+    case "VOICE_FALLBACK":
+      return { ...state, voiceStatus: "fallback" };
+    case "START_MENTOR_REPLY":
+      return {
+        ...state,
+        voiceStatus: "mentor_speaking",
+        turns: [
+          ...state.turns,
+          {
+            speaker: "mentor",
+            text: action.text,
+            englishSubtitle: action.englishSubtitle,
+          },
+        ],
+      };
+    case "MENTOR_REPLY_FINISHED":
+      return { ...state, voiceStatus: "listening" };
+    case "SPEECH_STARTED":
+      return {
+        ...state,
+        voiceStatus: "listening",
+        selfCorrectionPending: state.voiceStatus === "mentor_speaking",
+        turns: state.turns.map((turn, index) =>
+          index === state.turns.length - 1 && turn.speaker === "mentor"
+            ? { ...turn, interrupted: true }
+            : turn,
+        ),
+      };
+    case "TURN_TRANSCRIPT": {
+      const turnType = state.selfCorrectionPending
+        ? "self_correction"
+        : state.stage === "clarification_required"
+          ? "clarification"
+          : "initial_reasoning";
+      const label =
+        turnType === "self_correction"
+          ? "Self-correction: "
+          : turnType === "clarification"
+            ? "Clarification: "
+            : "";
+      return {
+        ...state,
+        voiceStatus: "processing",
+        transcript: [state.transcript, `${label}${action.transcript}`]
+          .filter(Boolean)
+          .join("\n"),
+        turns: [
+          ...state.turns,
+          { speaker: "learner", text: action.transcript, turnType },
+        ],
+        selfCorrectionPending: false,
+      };
+    }
     case "START_RECORDING":
       return { ...state, stage: "recording", error: undefined };
     case "START_TRANSCRIPTION":
@@ -77,7 +171,12 @@ export function recoveryReducer(
     case "START_WRITEBACK":
       return { ...state, stage: "writing_back", writeback: action.writeback };
     case "COMPLETED":
-      return { ...state, stage: "completed", writeback: action.writeback };
+      return {
+        ...state,
+        stage: "completed",
+        voiceStatus: "ended",
+        writeback: action.writeback,
+      };
     case "ERROR":
       return {
         ...state,

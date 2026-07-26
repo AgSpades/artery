@@ -6,6 +6,7 @@ import {
   groundClarification,
   groundDiagnosis,
   needsClarificationTranscript,
+  resolveSpokenOption,
 } from "./validation.ts";
 
 test("grounds deterministic diagnosis fields in the concept packet", () => {
@@ -52,6 +53,19 @@ test("grounds deterministic diagnosis fields in the concept packet", () => {
     conceptId: packet.id,
     masteryState: "misconception_detected",
   });
+});
+
+test("resolves a spoken transfer answer without guessing", () => {
+  const options = [
+    { id: "A", text: "Lysosomes" },
+    { id: "B", text: "Mitochondria" },
+    { id: "C", text: "Golgi bodies" },
+    { id: "D", text: "Nuclei" },
+  ];
+
+  assert.equal(resolveSpokenOption("B, mitochondria because ATP", options), "B");
+  assert.equal(resolveSpokenOption("Mitochondria honge", options), "B");
+  assert.equal(resolveSpokenOption("High concentration wali side", options), null);
 });
 
 test("requests clarification when the learner cannot recall a reason", () => {

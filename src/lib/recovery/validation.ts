@@ -82,6 +82,29 @@ export function matchesExpectedAnswer(answer: string, expected: string) {
   return answer.trim().toUpperCase() === expected.trim().toUpperCase();
 }
 
+export function resolveSpokenOption(
+  answer: string,
+  options: Array<{ id: string; text: string }>,
+) {
+  const explicit =
+    answer.match(/^\s*([A-D])(?:[,.):;-]|$)/i)?.[1] ??
+    answer.match(/\boption\s+([A-D])\b/i)?.[1];
+  if (explicit && options.some(({ id }) => id === explicit.toUpperCase())) {
+    return explicit.toUpperCase();
+  }
+
+  const normalized = answer
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}]+/gu, " ")
+    .trim();
+  const matches = options.filter(({ text }) =>
+    normalized.includes(
+      text.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, " ").trim(),
+    ),
+  );
+  return matches.length === 1 ? matches[0].id : null;
+}
+
 export const verificationRequestSchema = z.strictObject({
   sessionId: z.string().min(1),
   conceptPacketId: z.string().min(1),
