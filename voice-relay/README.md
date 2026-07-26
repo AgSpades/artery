@@ -2,23 +2,23 @@
 
 Runs Sarvam streaming STT and TTS outside the Vercel request lifecycle.
 
-Add these values to `.env.local`:
+Keep the server-only key in `.env.local`:
 
 ```env
-VOICE_STREAMING_ENABLED=true
-NEXT_PUBLIC_VOICE_RELAY_URL=ws://127.0.0.1:8787
-VOICE_RELAY_PORT=8787
-VOICE_RELAY_ALLOWED_ORIGINS=http://127.0.0.1:3000,http://localhost:3000
+SARVAM_API_KEY=your-key
 ```
 
-Keep `SARVAM_API_KEY` in `.env.local`, then run:
+Then start both Next.js and the relay in one terminal:
 
 ```bash
-npm run voice-relay
-npm run dev
+npm run dev:voice
 ```
 
 Health check: `http://127.0.0.1:8787/health`.
+
+The launcher forces live voice on, disables demo fallback, and points the browser
+at `ws://127.0.0.1:8787`. The individual `npm run dev` and
+`npm run voice-relay` commands remain available for separate debugging.
 
 The relay binds to loopback only. An HTTPS-hosted Artery client needs a separately
 hosted `wss://` relay; browsers will block an insecure `ws://` relay from HTTPS.

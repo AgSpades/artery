@@ -5,11 +5,12 @@
   "type": "module",
   "scripts": {
     "dev": "next dev",
+    "dev:voice": "node --env-file=.env.local voice-relay/dev.mjs",
     "voice-relay": "node --env-file=.env.local voice-relay/server.mjs",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "node --test public/pcm16-worklet.test.js src/lib/concepts/repository.test.ts src/lib/recovery/reducer.test.ts src/lib/recovery/validation.test.ts src/lib/sarvam/audio.test.ts src/lib/sarvam/chat.test.ts src/lib/sarvam/retry.test.ts src/lib/schemas.test.ts src/lib/voice/contracts.test.ts src/lib/voice/relay-url.test.ts"
+    "test": "node --test public/pcm16-worklet.test.js src/lib/concepts/repository.test.ts src/lib/recovery/reducer.test.ts src/lib/recovery/validation.test.ts src/lib/sarvam/audio.test.ts src/lib/sarvam/chat.test.ts src/lib/sarvam/retry.test.ts src/lib/schemas.test.ts src/lib/voice/contracts.test.ts src/lib/voice/relay-url.test.ts voice-relay/dev.test.mjs"
   },
   "dependencies": {
     "@vercel/functions": "^3.7.6",
