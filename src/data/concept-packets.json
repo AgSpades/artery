@@ -1,0 +1,159 @@
+{
+  "packVersion": "1.0",
+  "scope": "NCERT Class XI Biology, Chapter 8: Cell — The Unit of Life",
+  "cases": [
+    {
+      "id": "CELL_MITO_001",
+      "concept": "Nucleus versus mitochondrion",
+      "question": "Which cell organelle is the principal site of aerobic respiration and cellular ATP production?",
+      "options": [
+        { "id": "A", "text": "Nucleus" },
+        { "id": "B", "text": "Mitochondrion" },
+        { "id": "C", "text": "Golgi apparatus" },
+        { "id": "D", "text": "Lysosome" }
+      ],
+      "correctOption": "B",
+      "demoWrongOption": "A",
+      "allowedMisconceptions": [
+        { "id": "CONTROL_EQUALS_EXECUTION", "description": "The learner assumes the organelle that controls cellular activity physically performs every major cellular process." },
+        { "id": "POWERHOUSE_RECALL_GAP", "description": "The learner partially remembers the term powerhouse but cannot connect it to ATP production." },
+        { "id": "UNCERTAIN", "description": "The transcript does not support a safe diagnosis." }
+      ],
+      "verifiedFacts": [
+        "The nucleus contains genetic material and regulates cellular activities.",
+        "Mitochondria are sites of aerobic respiration.",
+        "Mitochondria produce cellular energy as ATP.",
+        "The inner mitochondrial membrane forms cristae."
+      ],
+      "transferQuestion": {
+        "question": "A cell has a very high and continuous demand for ATP. Which organelle would you expect to be especially abundant?",
+        "options": [
+          { "id": "A", "text": "Lysosomes" },
+          { "id": "B", "text": "Mitochondria" },
+          { "id": "C", "text": "Golgi bodies" },
+          { "id": "D", "text": "Nuclei" }
+        ],
+        "correctOption": "B"
+      },
+      "recallCard": {
+        "front": "Control centre vs energy-production site: which organelle does each job?",
+        "back": "Nucleus regulates cellular activity; mitochondria perform aerobic respiration and produce ATP."
+      }
+    },
+    {
+      "id": "CELL_OSMOSIS_002",
+      "concept": "Diffusion versus osmosis",
+      "question": "Which statement best describes osmosis across a cell membrane?",
+      "options": [
+        { "id": "A", "text": "Movement of any solute from high concentration to low concentration" },
+        { "id": "B", "text": "Diffusion of water across a selectively permeable membrane" },
+        { "id": "C", "text": "Movement of ions against a concentration gradient using ATP" },
+        { "id": "D", "text": "Packaging of substances into vesicles" }
+      ],
+      "correctOption": "B",
+      "demoWrongOption": "A",
+      "allowedMisconceptions": [
+        { "id": "OSMOSIS_EQUALS_ALL_DIFFUSION", "description": "The learner treats every high-to-low movement as osmosis." },
+        { "id": "MEMBRANE_CONDITION_MISSING", "description": "The learner remembers water movement but omits the selectively permeable membrane condition." },
+        { "id": "UNCERTAIN", "description": "The transcript does not support a safe diagnosis." }
+      ],
+      "verifiedFacts": [
+        "Passive transport does not require energy.",
+        "Neutral solutes can move by simple diffusion along a concentration gradient.",
+        "Movement of water by diffusion across a membrane is called osmosis.",
+        "Active transport moves substances against a concentration gradient and uses ATP."
+      ],
+      "transferQuestion": {
+        "question": "A membrane allows water to pass but not sugar. Water moves toward the side with the higher sugar concentration. Which process is occurring?",
+        "options": [
+          { "id": "A", "text": "Active transport" },
+          { "id": "B", "text": "Osmosis" },
+          { "id": "C", "text": "Protein synthesis" },
+          { "id": "D", "text": "Exocytosis" }
+        ],
+        "correctOption": "B"
+      },
+      "recallCard": {
+        "front": "What makes osmosis different from ordinary diffusion?",
+        "back": "Osmosis is the diffusion of water across a selectively permeable membrane."
+      }
+    },
+    {
+      "id": "CELL_PROTEIN_003",
+      "concept": "Protein synthesis versus packaging",
+      "question": "Which cellular structure directly translates mRNA into protein?",
+      "options": [
+        { "id": "A", "text": "Ribosome" },
+        { "id": "B", "text": "Golgi apparatus" },
+        { "id": "C", "text": "Lysosome" },
+        { "id": "D", "text": "Smooth endoplasmic reticulum" }
+      ],
+      "correctOption": "A",
+      "demoWrongOption": "B",
+      "allowedMisconceptions": [
+        { "id": "HANDLES_PROTEIN_EQUALS_SYNTHESIZES", "description": "The learner assumes that because Golgi handles proteins, it is the structure that creates them." },
+        { "id": "ER_GOLGI_RIBOSOME_SEQUENCE_CONFUSION", "description": "The learner cannot distinguish production from modification, sorting, and packaging." },
+        { "id": "UNCERTAIN", "description": "The transcript does not support a safe diagnosis." }
+      ],
+      "verifiedFacts": [
+        "Ribosomes are the site of protein synthesis.",
+        "Ribosomes translate mRNA into proteins.",
+        "The Golgi apparatus packages material for delivery or secretion.",
+        "Some proteins synthesized on ER-associated ribosomes are modified in the Golgi."
+      ],
+      "transferQuestion": {
+        "question": "A newly formed secretory protein is being produced from an mRNA template. Which structure performs the production step?",
+        "options": [
+          { "id": "A", "text": "Golgi apparatus" },
+          { "id": "B", "text": "Ribosome" },
+          { "id": "C", "text": "Lysosome" },
+          { "id": "D", "text": "Vacuole" }
+        ],
+        "correctOption": "B"
+      },
+      "recallCard": {
+        "front": "Ribosome and Golgi: what is the key difference?",
+        "back": "Ribosome synthesizes protein; Golgi modifies, sorts, and packages material."
+      }
+    },
+    {
+      "id": "CELL_TRANSPORT_004",
+      "concept": "Passive versus active transport",
+      "question": "Which process moves ions against their concentration gradient using cellular energy?",
+      "options": [
+        { "id": "A", "text": "Simple diffusion" },
+        { "id": "B", "text": "Osmosis" },
+        { "id": "C", "text": "Active transport" },
+        { "id": "D", "text": "Facilitated diffusion" }
+      ],
+      "correctOption": "C",
+      "demoWrongOption": "A",
+      "allowedMisconceptions": [
+        { "id": "ALL_MOVEMENT_EQUALS_DIFFUSION", "description": "The learner classifies any particle movement as diffusion." },
+        { "id": "GRADIENT_DIRECTION_IGNORED", "description": "The learner ignores whether movement is down or against the concentration gradient." },
+        { "id": "ATP_CLUE_IGNORED", "description": "The learner misses the significance of ATP use." },
+        { "id": "UNCERTAIN", "description": "The transcript does not support a safe diagnosis." }
+      ],
+      "verifiedFacts": [
+        "Passive transport does not require energy.",
+        "Simple diffusion proceeds along a concentration gradient.",
+        "Active transport moves substances against a concentration gradient.",
+        "Active transport uses ATP."
+      ],
+      "transferQuestion": {
+        "question": "A membrane pump moves an ion from a region of lower concentration to a region of higher concentration. What must be true?",
+        "options": [
+          { "id": "A", "text": "It is osmosis" },
+          { "id": "B", "text": "It requires energy" },
+          { "id": "C", "text": "It is always simple diffusion" },
+          { "id": "D", "text": "No membrane protein is needed" }
+        ],
+        "correctOption": "B"
+      },
+      "recallCard": {
+        "front": "What two clues identify active transport?",
+        "back": "Movement against the concentration gradient and use of cellular energy, usually ATP."
+      }
+    }
+  ]
+}

@@ -1,0 +1,78 @@
+{
+  "CELL_MITO_001": {
+    "transcript": "Maine nucleus choose kiya kyunki nucleus cell ko control karta hai, toh mujhe laga energy production bhi wahin hota hoga.",
+    "misconceptionId": "CONTROL_EQUALS_EXECUTION",
+    "confidence": 0.96,
+    "studentEvidence": ["nucleus cell ko control karta hai", "energy production bhi wahin hota hoga"],
+    "correctReasoningFragment": "You correctly remembered that the nucleus regulates cellular activity.",
+    "divergencePoint": "The reasoning diverged when regulation was treated as the physical site of ATP production.",
+    "clarificationNeeded": false,
+    "clarifyingQuestion": null,
+    "spokenExplanation": "Nucleus cell ka control centre hai, lekin control karna aur process ka actual site hona alag baat hai. Aerobic respiration aur ATP production mitochondria mein hoti hai.",
+    "englishSubtitle": "The nucleus is the cell’s control centre, but regulation and the physical site of a process are different. Aerobic respiration and ATP production occur in mitochondria.",
+    "verificationQuestion": "A cell has a very high and continuous demand for ATP. Which organelle would you expect to be especially abundant?",
+    "expectedVerification": "B",
+    "memoryUpdates": {
+      "conceptId": "CELL_MITO_001",
+      "masteryState": "misconception_detected",
+      "latestCorrection": "Nucleus regulates; mitochondria perform aerobic respiration and produce ATP."
+    }
+  },
+  "CELL_OSMOSIS_002": {
+    "transcript": "High concentration se low concentration movement hai, isliye maine socha yeh osmosis hoga.",
+    "misconceptionId": "OSMOSIS_EQUALS_ALL_DIFFUSION",
+    "confidence": 0.94,
+    "studentEvidence": ["high concentration se low concentration", "yeh osmosis hoga"],
+    "correctReasoningFragment": "You correctly remembered movement along a concentration difference.",
+    "divergencePoint": "The reasoning did not distinguish the substance moving or the selectively permeable membrane condition.",
+    "clarificationNeeded": false,
+    "clarifyingQuestion": null,
+    "spokenExplanation": "High se low movement diffusion ka general idea hai. Osmosis specifically water ka diffusion hai, aur selectively permeable membrane ke across hota hai.",
+    "englishSubtitle": "High-to-low movement is the general idea of diffusion. Osmosis specifically means water diffusing across a selectively permeable membrane.",
+    "verificationQuestion": "A membrane allows water to pass but not sugar. Water moves toward the side with the higher sugar concentration. Which process is occurring?",
+    "expectedVerification": "B",
+    "memoryUpdates": {
+      "conceptId": "CELL_OSMOSIS_002",
+      "masteryState": "misconception_detected",
+      "latestCorrection": "Osmosis is water diffusion across a selectively permeable membrane."
+    }
+  },
+  "CELL_PROTEIN_003": {
+    "transcript": "Golgi proteins ko handle karta hai, toh maine Golgi choose kiya as protein banane wala organelle.",
+    "misconceptionId": "HANDLES_PROTEIN_EQUALS_SYNTHESIZES",
+    "confidence": 0.95,
+    "studentEvidence": ["Golgi proteins ko handle karta hai", "protein banane wala organelle"],
+    "correctReasoningFragment": "You correctly remembered that Golgi is involved with proteins.",
+    "divergencePoint": "The reasoning treated downstream modification and packaging as protein synthesis.",
+    "clarificationNeeded": false,
+    "clarifyingQuestion": null,
+    "spokenExplanation": "Golgi proteins ko modify, sort aur package karta hai. Protein synthesis ka actual step ribosome karta hai by translating mRNA.",
+    "englishSubtitle": "Golgi modifies, sorts, and packages proteins. Ribosomes perform the actual synthesis step by translating mRNA.",
+    "verificationQuestion": "A newly formed secretory protein is being produced from an mRNA template. Which structure performs the production step?",
+    "expectedVerification": "B",
+    "memoryUpdates": {
+      "conceptId": "CELL_PROTEIN_003",
+      "masteryState": "misconception_detected",
+      "latestCorrection": "Ribosomes synthesize protein; Golgi modifies, sorts, and packages it."
+    }
+  },
+  "CELL_TRANSPORT_004": {
+    "transcript": "Particles move kar rahe hain toh maine diffusion choose kiya, ATP wala clue miss ho gaya.",
+    "misconceptionId": "ATP_CLUE_IGNORED",
+    "confidence": 0.92,
+    "studentEvidence": ["diffusion choose kiya", "ATP wala clue miss ho gaya"],
+    "correctReasoningFragment": "You correctly recognized that substances move across membranes.",
+    "divergencePoint": "The reasoning ignored direction relative to the concentration gradient and the ATP requirement.",
+    "clarificationNeeded": false,
+    "clarifyingQuestion": null,
+    "spokenExplanation": "Passive transport gradient ke saath hota hai aur energy nahi leta. Active transport gradient ke against hota hai aur ATP use karta hai.",
+    "englishSubtitle": "Passive transport moves down the gradient without energy. Active transport moves against the gradient and uses ATP.",
+    "verificationQuestion": "A membrane pump moves an ion from lower concentration to higher concentration. What must be true?",
+    "expectedVerification": "B",
+    "memoryUpdates": {
+      "conceptId": "CELL_TRANSPORT_004",
+      "masteryState": "misconception_detected",
+      "latestCorrection": "Active transport moves against the gradient and uses ATP."
+    }
+  }
+}
