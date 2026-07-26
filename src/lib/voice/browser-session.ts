@@ -4,6 +4,7 @@ import {
   sttServerMessageSchema,
   ttsServerMessageSchema,
 } from "@/lib/voice/contracts";
+import { voiceSocketUrl } from "@/lib/voice/relay-url";
 
 type VoiceCallbacks = {
   onReady: () => void;
@@ -13,12 +14,6 @@ type VoiceCallbacks = {
   onTranscript: (transcript: string) => void;
   onError: (message: string) => void;
 };
-
-function socketUrl(path: string) {
-  const url = new URL(path, window.location.href);
-  url.protocol = url.protocol === "https:" ? "wss:" : "ws:";
-  return url;
-}
 
 function parseJson(value: unknown) {
   try {
@@ -80,7 +75,13 @@ export class BrowserVoiceSession {
   ) {
     if (!this.context) return onError("Spoken audio is unavailable.");
     this.stopSpeech();
-    const socket = new WebSocket(socketUrl("/api/voice/tts"));
+    const socket = new WebSocket(
+      voiceSocketUrl(
+        "tts",
+        window.location.href,
+        process.env.NEXT_PUBLIC_VOICE_RELAY_URL,
+      ),
+    );
     this.tts = socket;
     socket.onmessage = ({ data }) => {
       const parsed = ttsServerMessageSchema.safeParse(
@@ -135,7 +136,13 @@ export class BrowserVoiceSession {
   }
 
   private connectStt(attempt = 0) {
-    const socket = new WebSocket(socketUrl("/api/voice/stt"));
+    const socket = new WebSocket(
+      voiceSocketUrl(
+        "stt",
+        window.location.href,
+        process.env.NEXT_PUBLIC_VOICE_RELAY_URL,
+      ),
+    );
     this.stt = socket;
     socket.onmessage = ({ data }) => {
       const parsed = sttServerMessageSchema.safeParse(parseJson(data));
