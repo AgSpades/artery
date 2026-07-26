@@ -4,21 +4,14 @@ import { apiError } from "@/lib/api";
 import { getConceptPacket } from "@/lib/concepts/repository";
 import { getFallbackOutput } from "@/lib/demo/fallback";
 import { getServerEnv } from "@/lib/env";
+import { groundDiagnosis } from "@/lib/recovery/validation";
 import { diagnosisSchema, hostRecoveryRequestSchema } from "@/lib/schemas";
+import { parseChatResponse } from "@/lib/sarvam/chat";
 import { sarvamFetch, SarvamProviderError } from "@/lib/sarvam/client";
 
 const requestSchema = z.strictObject({
   transcript: z.string().min(1),
   context: hostRecoveryRequestSchema,
-});
-
-const chatResponseSchema = z.object({
-  id: z.string().optional(),
-  choices: z.array(
-    z.object({
-      message: z.object({ content: z.string() }),
-    }),
-  ).min(1),
 });
 
 export async function POST(request: Request) {
@@ -63,12 +56,13 @@ export async function POST(request: Request) {
       body: JSON.stringify({
         model: "sarvam-30b",
         temperature: 0.1,
-        max_tokens: 1200,
+        reasoning_effort: null,
+        max_tokens: 1800,
         messages: [
           {
             role: "system",
             content:
-              "Diagnose only from the supplied concept packet. Use an allowed misconception ID or UNCERTAIN. Reference the learner's words, identify partial correctness, speak Hindi-first with English Biology terminology, provide a faithful English subtitle, and do not mark mastery as repaired before verification.",
+              "Return only the requested JSON. Diagnose only from the supplied concept packet. Copy misconceptionId verbatim from allowedMisconceptions; never shorten or invent an ID. Reference the learner's words, identify partial correctness, speak Hindi-first with English Biology terminology, provide a faithful English subtitle, and keep masteryState as misconception_detected before verification.",
           },
           { role: "user", content: JSON.stringify(prompt) },
         ],
@@ -82,7 +76,7 @@ export async function POST(request: Request) {
         },
       }),
     });
-    const chat = chatResponseSchema.safeParse(await response.json());
+    const chat = parseChatResponse(await response.json());
     if (!chat.success) {
       return apiError(
         "PROVIDER_SCHEMA_ERROR",
@@ -113,7 +107,7 @@ export async function POST(request: Request) {
       );
     }
     if (chat.data.id) console.info(`Sarvam diagnosis request: ${chat.data.id}`);
-    return Response.json({ diagnosis: diagnosis.data });
+    return Response.json({ diagnosis: groundDiagnosis(diagnosis.data, packet) });
   } catch (error) {
     if (error instanceof SyntaxError) {
       return apiError(

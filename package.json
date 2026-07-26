@@ -8,7 +8,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "node --test src/lib/concepts/repository.test.ts src/lib/recovery/reducer.test.ts src/lib/sarvam/audio.test.ts"
+    "test": "node --test src/lib/concepts/repository.test.ts src/lib/recovery/reducer.test.ts src/lib/recovery/validation.test.ts src/lib/sarvam/audio.test.ts src/lib/sarvam/chat.test.ts"
   },
   "dependencies": {
     "lucide-react": "^1.27.0",
