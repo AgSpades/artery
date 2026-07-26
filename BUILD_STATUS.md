@@ -1,11 +1,11 @@
 # Build status
 
-- Active milestone: 2 — TTS and voice quality
-- Implemented: Foundation; host session creation; MediaRecorder; Sarvam STT, structured diagnosis, and TTS adapters; concise two-sentence repair contract; personal learner address; English subtitle grounding; progressive transcript evidence; reducer state machine; deterministic verification; recall scheduling; localStorage memory; host write-back; history; labelled fallback mode
-- Working locally: Live named Hindi-English diagnosis to browser-playable TTS; complete fallback flow from wrong answer through host mastery update and persisted history
-- Verified: Six tests; ESLint; production build; live health response; live TTS-to-STT round trip; live named diagnosis-to-TTS; parameterized MediaRecorder MIME forwarding; production-browser conversational repair state; history after reload; 320px no-overflow check; clean browser console
-- Demo-ready: Yes, in visibly labelled fallback mode
-- Current blocker: None in the REST voice path; a real microphone-to-playback browser pass still needs manual permission and speech
-- Largest demo risk: Provider wording varies, bounded by the two-sentence ceiling and concept-grounded English fallback
-- Next action: Deploy Milestone 2, then run one manual microphone-to-playback session in production
+- Active milestone: 3 — Repeated proof
+- Implemented: Foundation; REST voice recovery; four bounded Cell Biology cases; concept-grounded spoken repairs and English subtitles; personal learner address; explicit uncertainty detection; one focused clarification; reducer state machine; deterministic verification; recall scheduling; localStorage memory; host write-back; history; labelled fallback mode
+- Working locally: Three consecutive live Sarvam diagnosis-to-TTS cases completed through verification and write-back; an uncertain answer requested one packet-bounded clarification and resolved on the follow-up
+- Verified: Seven tests; ESLint; production build; live health response; live diagnosis and TTS for nucleus/mitochondria, diffusion/osmosis, and ribosome/Golgi; deterministic verification; accepted host write-back; clarification-loop regression check
+- Demo-ready: Yes for the three-case REST recovery path
+- Current blocker: None; a real microphone-to-playback browser pass still needs manual permission and speech
+- Largest demo risk: Transient provider 502/504 responses and device microphone permissions; completed work remains retryable
+- Next action: Milestone 4 — verify persisted learner continuity and targeted review from a fresh page
 - Cut features: Streaming, VAD, barge-in, public developer portal

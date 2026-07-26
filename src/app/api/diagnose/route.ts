@@ -4,7 +4,10 @@ import { apiError } from "@/lib/api";
 import { getConceptPacket } from "@/lib/concepts/repository";
 import { getFallbackOutput } from "@/lib/demo/fallback";
 import { getServerEnv } from "@/lib/env";
-import { groundDiagnosis } from "@/lib/recovery/validation";
+import {
+  groundClarification,
+  groundDiagnosis,
+} from "@/lib/recovery/validation";
 import { diagnosisSchema, hostRecoveryRequestSchema } from "@/lib/schemas";
 import { parseChatResponse } from "@/lib/sarvam/chat";
 import { sarvamFetch, SarvamProviderError } from "@/lib/sarvam/client";
@@ -108,7 +111,19 @@ export async function POST(request: Request) {
       );
     }
     if (chat.data.id) console.info(`Sarvam diagnosis request: ${chat.data.id}`);
-    return Response.json({ diagnosis: groundDiagnosis(diagnosis.data, packet) });
+    const grounded = groundDiagnosis(
+      diagnosis.data,
+      packet,
+      parsed.data.learnerName,
+    );
+    return Response.json({
+      diagnosis: groundClarification(
+        grounded,
+        packet,
+        parsed.data.learnerName,
+        parsed.data.transcript,
+      ),
+    });
   } catch (error) {
     if (error instanceof SyntaxError) {
       return apiError(

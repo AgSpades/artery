@@ -96,6 +96,8 @@ export const conceptPacketSchema = z.strictObject({
     front: z.string().min(1),
     back: z.string().min(1),
   }),
+  spokenRepair: z.string().min(1).max(360),
+  clarifyingQuestion: z.string().min(1).max(300),
 });
 
 export const conceptPacketsSchema = z.strictObject({

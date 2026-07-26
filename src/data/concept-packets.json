@@ -38,7 +38,9 @@
       "recallCard": {
         "front": "Control centre vs energy-production site: which organelle does each job?",
         "back": "Nucleus regulates cellular activity; mitochondria perform aerobic respiration and produce ATP."
-      }
+      },
+      "spokenRepair": "Nucleus cell ka control centre hai, lekin control karna aur process ka actual site hona alag baat hai. Aerobic respiration aur ATP production mitochondria mein hoti hai.",
+      "clarifyingQuestion": "Kya tumhe laga control centre har process khud karta hai, ya 'powerhouse' term yaad tha but ATP link miss hua?"
     },
     {
       "id": "CELL_OSMOSIS_002",
@@ -76,7 +78,9 @@
       "recallCard": {
         "front": "What makes osmosis different from ordinary diffusion?",
         "back": "Osmosis is the diffusion of water across a selectively permeable membrane."
-      }
+      },
+      "spokenRepair": "High se low movement diffusion ka general idea hai. Osmosis specifically water ka diffusion hai, aur selectively permeable membrane ke across hota hai.",
+      "clarifyingQuestion": "Kya tum har high-to-low movement ko osmosis keh rahi thi, ya water yaad tha but selective membrane condition miss hui?"
     },
     {
       "id": "CELL_PROTEIN_003",
@@ -114,7 +118,9 @@
       "recallCard": {
         "front": "Ribosome and Golgi: what is the key difference?",
         "back": "Ribosome synthesizes protein; Golgi modifies, sorts, and packages material."
-      }
+      },
+      "spokenRepair": "Golgi proteins ko modify, sort aur package karta hai. Protein synthesis ka actual step ribosome karta hai by translating mRNA.",
+      "clarifyingQuestion": "Kya tumhe laga protein ko handle karna hi protein banana hai, ya ribosome–ER–Golgi sequence confuse hua?"
     },
     {
       "id": "CELL_TRANSPORT_004",
@@ -153,7 +159,9 @@
       "recallCard": {
         "front": "What two clues identify active transport?",
         "back": "Movement against the concentration gradient and use of cellular energy, usually ATP."
-      }
+      },
+      "spokenRepair": "Passive transport gradient ke saath hota hai aur energy nahi leta. Active transport gradient ke against hota hai aur ATP use karta hai.",
+      "clarifyingQuestion": "Kya tumne har particle movement ko diffusion maana, ya gradient direction aur ATP clue miss hua?"
     }
   ]
 }

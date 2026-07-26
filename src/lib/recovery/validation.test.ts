@@ -2,13 +2,19 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import type { Diagnosis } from "../types.ts";
-import { groundDiagnosis } from "./validation.ts";
+import {
+  groundClarification,
+  groundDiagnosis,
+  needsClarificationTranscript,
+} from "./validation.ts";
 
 test("grounds deterministic diagnosis fields in the concept packet", () => {
   const packet = {
     id: "CELL_MITO_001",
     transferQuestion: { question: "Which organelle produces ATP?", correctOption: "B" },
     recallCard: { back: "The nucleus controls; mitochondria produce ATP." },
+    spokenRepair: "Nucleus controls; mitochondria ATP banata hai.",
+    clarifyingQuestion: "Which idea were you using?",
   };
   const diagnosis = {
     misconceptionId: "CONTROL_EQUALS_EXECUTION",
@@ -29,11 +35,14 @@ test("grounds deterministic diagnosis fields in the concept packet", () => {
       latestCorrection: "Nucleus controls; mitochondria produce ATP.",
     },
   } satisfies Diagnosis;
-  const grounded = groundDiagnosis(diagnosis, packet);
+  const grounded = groundDiagnosis(diagnosis, packet, "Ananya");
 
   assert.equal(grounded.verificationQuestion, packet.transferQuestion.question);
   assert.equal(grounded.expectedVerification, packet.transferQuestion.correctOption);
-  assert.equal(grounded.spokenExplanation, "First idea. One repair.");
+  assert.equal(
+    grounded.spokenExplanation,
+    "Ananya, Nucleus controls; mitochondria ATP banata hai.",
+  );
   assert.equal(
     grounded.englishSubtitle,
     "The nucleus controls; mitochondria produce ATP.",
@@ -43,4 +52,69 @@ test("grounds deterministic diagnosis fields in the concept packet", () => {
     conceptId: packet.id,
     masteryState: "misconception_detected",
   });
+});
+
+test("requests clarification when the learner cannot recall a reason", () => {
+  assert.equal(
+    needsClarificationTranscript(
+      "Mujhe bas A sahi laga, exact reason yaad nahi aa raha.",
+    ),
+    true,
+  );
+  assert.equal(
+    needsClarificationTranscript(
+      "High concentration se low concentration movement hai.",
+    ),
+    false,
+  );
+  assert.equal(
+    needsClarificationTranscript(
+      "Mujhe exact reason yaad nahi aa raha.\nClarification: Mujhe laga har high-to-low movement osmosis hota hai.",
+    ),
+    false,
+  );
+
+  const diagnosis = {
+    misconceptionId: "OSMOSIS_EQUALS_ALL_DIFFUSION",
+    confidence: 0.9,
+    studentEvidence: ["high to low movement"],
+    correctReasoningFragment: "You remembered a concentration difference.",
+    divergencePoint: "Water and membrane conditions were missing.",
+    clarificationNeeded: true,
+    clarifyingQuestion: "Model asked an unnecessary question.",
+    spokenExplanation: "Grounded repair.",
+    englishSubtitle: "Grounded subtitle.",
+    verificationQuestion: "Transfer question",
+    expectedVerification: "B",
+    memoryUpdates: {
+      conceptId: "CELL_OSMOSIS_002",
+      masteryState: "misconception_detected",
+      latestCorrection: "Osmosis requires water and a selective membrane.",
+    },
+  } satisfies Diagnosis;
+  const packet = {
+    clarifyingQuestion: "Which osmosis idea were you using?",
+  };
+
+  const clear = groundClarification(
+    diagnosis,
+    packet,
+    "Ananya",
+    "High concentration se low concentration movement hai.",
+  );
+  assert.equal(clear.clarificationNeeded, false);
+  assert.equal(clear.clarifyingQuestion, null);
+
+  const uncertain = groundClarification(
+    diagnosis,
+    packet,
+    "Ananya",
+    "Mujhe exact reason yaad nahi aa raha.",
+  );
+  assert.equal(uncertain.misconceptionId, "UNCERTAIN");
+  assert.equal(uncertain.clarificationNeeded, true);
+  assert.equal(
+    uncertain.clarifyingQuestion,
+    "Ananya, Which osmosis idea were you using?",
+  );
 });
