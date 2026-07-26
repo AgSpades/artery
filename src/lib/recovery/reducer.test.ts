@@ -25,6 +25,7 @@ test("keeps a self-correction in the same conversation after barge-in", () => {
     type: "START_CONVERSATION",
   });
   state = recoveryReducer(state, { type: "VOICE_READY" });
+  state = recoveryReducer(state, { type: "BEGIN_EXPLANATION" });
   state = recoveryReducer(state, {
     type: "START_MENTOR_REPLY",
     text: "Nucleus control centre hai, lekin ATP mitochondria banata hai.",

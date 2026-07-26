@@ -100,7 +100,9 @@ export function recoveryReducer(
       return {
         ...state,
         voiceStatus: "listening",
-        selfCorrectionPending: state.voiceStatus === "mentor_speaking",
+        selfCorrectionPending:
+          state.voiceStatus === "mentor_speaking" &&
+          ["explaining", "retry_explanation"].includes(state.stage),
         turns: state.turns.map((turn, index) =>
           index === state.turns.length - 1 && turn.speaker === "mentor"
             ? { ...turn, interrupted: true }

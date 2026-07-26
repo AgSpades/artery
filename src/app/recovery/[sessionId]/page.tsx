@@ -8,11 +8,13 @@ export default async function RecoveryPage({
   params: Promise<{ sessionId: string }>;
 }) {
   const { sessionId } = await params;
+  const env = getServerEnv();
   return (
     <RecoveryFlow
-      fallbackMode={getServerEnv().DEMO_FALLBACK_MODE}
+      fallbackMode={env.DEMO_FALLBACK_MODE}
       packets={conceptPackets}
       sessionId={sessionId}
+      voiceStreamingEnabled={env.VOICE_STREAMING_ENABLED}
     />
   );
 }

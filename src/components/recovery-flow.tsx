@@ -9,12 +9,13 @@ import {
   TriangleAlert,
 } from "lucide-react";
 import Link from "next/link";
-import { useReducer, useState } from "react";
+import { useEffect, useReducer, useRef, useState } from "react";
 import { z } from "zod";
 
 import { ExplanationPlayer } from "@/components/explanation-player";
 import { RecoveryTimeline } from "@/components/recovery-timeline";
 import { VoiceRecorder } from "@/components/voice-recorder";
+import { VoiceMentorPanel } from "@/components/voice-mentor-panel";
 import {
   loadActiveSession,
   loadMemory,
@@ -35,6 +36,7 @@ import type {
   RecoveryStage,
   RecoveryWriteback,
 } from "@/lib/types";
+import { BrowserVoiceSession } from "@/lib/voice/browser-session";
 
 const sttResponseSchema = z.object({
   transcript: z.string().min(1),
@@ -56,6 +58,21 @@ const writebackResponseSchema = z.object({
   sessionId: z.string(),
   hostStatus: z.string(),
 });
+const voiceVerifyResponseSchema = z.object({
+  resolvedAnswer: z.string().nullable(),
+  clarificationNeeded: z.boolean(),
+  clarifyingQuestion: z.string().optional(),
+  passed: z.boolean().optional(),
+  expectedAnswer: z.string().optional(),
+  masteryState: z
+    .enum(["provisionally_repaired", "verification_failed"])
+    .optional(),
+  recallCard: recallCardSchema.optional(),
+});
+type DiagnosisTurnType =
+  | "initial_reasoning"
+  | "clarification"
+  | "self_correction";
 
 function stageNumber(stage: RecoveryStage) {
   if (["idle", "recording", "transcribing", "transcript_review"].includes(stage)) return 0;
@@ -69,15 +86,24 @@ export function RecoveryFlow({
   fallbackMode,
   packets,
   sessionId,
+  voiceStreamingEnabled,
 }: {
   fallbackMode: boolean;
   packets: ConceptPacket[];
   sessionId: string;
+  voiceStreamingEnabled: boolean;
 }) {
   const [state, dispatch] = useReducer(recoveryReducer, initialRecoveryState);
   const [answer, setAnswer] = useState("");
   const [clarification, setClarification] = useState("");
   const [lastAudio, setLastAudio] = useState<Blob>();
+  const voice = useRef<BrowserVoiceSession | null>(null);
+  const openingStarted = useRef(false);
+  const stateRef = useRef(state);
+  useEffect(() => {
+    stateRef.current = state;
+  }, [state]);
+  useEffect(() => () => voice.current?.close(), []);
   const isClient = useClientReady();
   const stored = isClient ? loadActiveSession(sessionId) : undefined;
   const learnerName = isClient ? loadMemory().learner.name : "Learner";
@@ -106,24 +132,222 @@ export function RecoveryFlow({
     }
   }
 
-  async function diagnose(transcript = state.transcript) {
+  async function diagnose(
+    transcript = state.transcript,
+    turnType: DiagnosisTurnType = "initial_reasoning",
+    latestTurn?: string,
+  ) {
     if (!activeContext || !transcript.trim()) return;
     dispatch({ type: "START_DIAGNOSIS" });
     try {
       const response = await fetch("/api/diagnose", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ transcript, learnerName, context: activeContext }),
+        body: JSON.stringify({
+          transcript,
+          learnerName,
+          context: activeContext,
+          turnType,
+          latestTurn,
+        }),
       });
       const payload = diagnosisResponseSchema.safeParse(await response.json());
       if (!response.ok || !payload.success) throw new Error("Diagnosis failed.");
-      dispatch({ type: "DIAGNOSIS_READY", diagnosis: payload.data.diagnosis });
+      const diagnosis = payload.data.diagnosis;
+      dispatch({ type: "DIAGNOSIS_READY", diagnosis });
+      if (voice.current && stateRef.current.voiceStatus !== "fallback") {
+        const concept = packets.find(
+          ({ id }) => id === activeContext.conceptPacketId,
+        );
+        if (!concept) return;
+        if (diagnosis.clarificationNeeded && diagnosis.clarifyingQuestion) {
+          return speakMentor(
+            diagnosis.clarifyingQuestion,
+            concept.clarifyingQuestionEnglish,
+          );
+        }
+        speakMentor(
+          diagnosis.spokenExplanation,
+          diagnosis.englishSubtitle,
+          () => {
+            dispatch({ type: "AWAIT_VERIFICATION" });
+            speakMentor(
+              concept.spokenVerificationQuestion,
+              diagnosis.verificationQuestion,
+            );
+          },
+        );
+      }
     } catch {
       dispatch({
         type: "ERROR",
         message: "Diagnosis could not finish. Your transcript is safe.",
         resumeStage: "transcript_review",
       });
+      if (voice.current) dispatch({ type: "VOICE_FALLBACK" });
+    }
+  }
+
+  function speakMentor(
+    text: string,
+    englishSubtitle: string,
+    after?: () => void,
+  ) {
+    const session = voice.current;
+    if (!session) return;
+    dispatch({ type: "START_MENTOR_REPLY", text, englishSubtitle });
+    let settled = false;
+    const finish = () => {
+      if (settled) return;
+      settled = true;
+      dispatch({ type: "MENTOR_REPLY_FINISHED" });
+      after?.();
+    };
+    session.speak(text, { onComplete: finish, onError: finish });
+  }
+
+  async function startVoice() {
+    dispatch({ type: "START_CONVERSATION" });
+    const session = new BrowserVoiceSession({
+      onReady: () => {
+        dispatch({ type: "VOICE_READY" });
+        if (openingStarted.current) return;
+        openingStarted.current = true;
+        speakMentor(
+          `${learnerName}, mujhe batao—tumhe yeh answer kyun sahi laga?`,
+          `${learnerName}, tell me what made that answer feel right.`,
+        );
+      },
+      onReconnecting: () => dispatch({ type: "VOICE_RECONNECTING" }),
+      onSpeechStart: () => dispatch({ type: "SPEECH_STARTED" }),
+      onSpeechEnd: () => undefined,
+      onTranscript: (transcript) => void handleVoiceTranscript(transcript),
+      onError: () => {
+        session.close();
+        dispatch({ type: "VOICE_FALLBACK" });
+      },
+    });
+    voice.current = session;
+    try {
+      await session.start();
+    } catch {
+      session.close();
+      voice.current = null;
+      dispatch({ type: "VOICE_FALLBACK" });
+    }
+  }
+
+  async function handleVoiceTranscript(latestTurn: string) {
+    const current = stateRef.current;
+    if (
+      ["repaired", "writing_back", "completed"].includes(current.stage)
+    ) {
+      return;
+    }
+    const turnType: DiagnosisTurnType = current.selfCorrectionPending
+      ? "self_correction"
+      : current.stage === "clarification_required"
+        ? "clarification"
+        : "initial_reasoning";
+    const label =
+      turnType === "self_correction"
+        ? "Self-correction: "
+        : turnType === "clarification"
+          ? "Clarification: "
+          : "";
+    const transcript = [current.transcript, `${label}${latestTurn}`]
+      .filter(Boolean)
+      .join("\n");
+    dispatch({ type: "TURN_TRANSCRIPT", transcript: latestTurn });
+
+    if (
+      ["awaiting_verification", "verifying"].includes(current.stage) &&
+      turnType !== "self_correction"
+    ) {
+      return verifyVoice(latestTurn);
+    }
+    await diagnose(transcript, turnType, latestTurn);
+  }
+
+  async function verifyVoice(spokenAnswer: string) {
+    const current = stateRef.current;
+    if (!activeContext || !current.diagnosis) return;
+    dispatch({ type: "START_VERIFICATION" });
+    try {
+      const response = await fetch("/api/verify/voice", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          sessionId,
+          conceptPacketId: activeContext.conceptPacketId,
+          spokenAnswer,
+          successfulReviews: 0,
+        }),
+      });
+      const payload = voiceVerifyResponseSchema.safeParse(await response.json());
+      if (!response.ok || !payload.success) {
+        throw new Error("Voice verification failed.");
+      }
+      const concept = packets.find(
+        ({ id }) => id === activeContext.conceptPacketId,
+      );
+      if (!concept) return;
+      if (payload.data.clarificationNeeded) {
+        dispatch({ type: "AWAIT_VERIFICATION" });
+        return speakMentor(
+          payload.data.clarifyingQuestion ??
+            "Option letter ya full answer ek baar phir bolo.",
+          "Please say the option letter or the full answer once more.",
+        );
+      }
+
+      const passed = Boolean(payload.data.passed);
+      if (!passed && current.verificationAttempts === 0) {
+        dispatch({ type: "VERIFICATION_FAILED" });
+        return speakMentor(
+          `${learnerName}, ek simpler contrast: ${concept.spokenRepair}`,
+          current.diagnosis.englishSubtitle,
+          () => {
+            dispatch({ type: "AWAIT_VERIFICATION" });
+            speakMentor(
+              concept.spokenVerificationQuestion,
+              current.diagnosis?.verificationQuestion ?? "",
+            );
+          },
+        );
+      }
+
+      if (passed) dispatch({ type: "REPAIRED" });
+      const writeback: RecoveryWriteback = {
+        sessionId,
+        learnerId: activeContext.learnerId,
+        conceptId: activeContext.conceptPacketId,
+        misconceptionId: current.diagnosis.misconceptionId,
+        diagnosis: current.diagnosis.divergencePoint,
+        evidence: current.diagnosis.studentEvidence,
+        verificationStatus: passed ? "passed" : "failed",
+        masteryState: passed
+          ? "provisionally_repaired"
+          : "verification_failed",
+        recallCard: payload.data.recallCard,
+        completedAt: new Date().toISOString(),
+      };
+      speakMentor(
+        passed
+          ? `${learnerName}, nice—ab distinction clear hai. Review kal scheduled hai.`
+          : `${learnerName}, is distinction ko hum review mein dobara uthayenge.`,
+        passed
+          ? `${learnerName}, the distinction is now clear. A review is scheduled for tomorrow.`
+          : `${learnerName}, we will revisit this distinction in review.`,
+        () => void sendWriteback(writeback),
+      );
+    } catch {
+      dispatch({
+        type: "ERROR",
+        message: "Verification could not finish. Your diagnosis is safe.",
+        resumeStage: "awaiting_verification",
+      });
+      dispatch({ type: "VOICE_FALLBACK" });
     }
   }
 
@@ -139,12 +363,15 @@ export function RecoveryFlow({
       if (!response.ok || !payload.success) throw new Error("Writeback failed.");
       saveWriteback(writeback);
       dispatch({ type: "COMPLETED", writeback });
+      voice.current?.close();
+      voice.current = null;
     } catch {
       dispatch({
         type: "ERROR",
         message: "Recovery is complete locally, but host write-back failed. Retry safely.",
         resumeStage: "writing_back",
       });
+      if (voice.current) dispatch({ type: "VOICE_FALLBACK" });
     }
   }
 
@@ -222,6 +449,29 @@ export function RecoveryFlow({
   }
 
   const selectedText = activeContext.options.find(({ id }) => id === activeContext.learnerAnswer)?.text;
+  const showVoiceMentor =
+    voiceStreamingEnabled &&
+    !fallbackMode &&
+    state.voiceStatus !== "fallback" &&
+    state.stage !== "completed";
+
+  if (showVoiceMentor) {
+    return (
+      <VoiceMentorPanel
+        learnerName={learnerName}
+        onFallback={() => {
+          voice.current?.close();
+          voice.current = null;
+          dispatch({ type: "VOICE_FALLBACK" });
+        }}
+        onStart={() => void startVoice()}
+        question={activeContext.question}
+        selectedAnswer={`${activeContext.learnerAnswer}. ${selectedText}`}
+        stage={stageNumber(state.stage)}
+        state={state}
+      />
+    );
+  }
 
   return (
     <main className="mx-auto max-w-6xl px-5 py-8" id="main" tabIndex={-1}>

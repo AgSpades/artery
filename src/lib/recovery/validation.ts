@@ -57,13 +57,22 @@ export function groundDiagnosis(
     spokenRepair: string;
   },
   learnerName: string,
+  turnType:
+    | "initial_reasoning"
+    | "clarification"
+    | "self_correction" = "initial_reasoning",
 ): Diagnosis {
+  const selfCorrection = turnType === "self_correction";
   return {
     ...diagnosis,
     spokenExplanation: firstTwoSentences(
-      `${learnerName}, ${packet.spokenRepair}`,
+      selfCorrection
+        ? `${learnerName}, yes—ab tumne distinction pakad liya. ${packet.spokenRepair}`
+        : `${learnerName}, ${packet.spokenRepair}`,
     ),
-    englishSubtitle: packet.recallCard.back,
+    englishSubtitle: selfCorrection
+      ? `That correction captures the distinction, ${learnerName}. ${packet.recallCard.back}`
+      : packet.recallCard.back,
     verificationQuestion: packet.transferQuestion.question,
     expectedVerification: packet.transferQuestion.correctOption,
     memoryUpdates: {

@@ -53,6 +53,15 @@ test("grounds deterministic diagnosis fields in the concept packet", () => {
     conceptId: packet.id,
     masteryState: "misconception_detected",
   });
+
+  const corrected = groundDiagnosis(
+    diagnosis,
+    packet,
+    "Ananya",
+    "self_correction",
+  );
+  assert.match(corrected.spokenExplanation, /^Ananya, yes—/);
+  assert.match(corrected.englishSubtitle, /That correction/);
 });
 
 test("resolves a spoken transfer answer without guessing", () => {
