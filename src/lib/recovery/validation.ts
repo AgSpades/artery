@@ -2,6 +2,20 @@ import { z } from "zod";
 
 import type { Diagnosis } from "@/lib/types";
 
+export function boundMisconception(
+  diagnosis: Diagnosis,
+  allowedIds: string[],
+): Diagnosis {
+  if (allowedIds.includes(diagnosis.misconceptionId)) return diagnosis;
+  return {
+    ...diagnosis,
+    misconceptionId: "UNCERTAIN",
+    confidence: Math.min(diagnosis.confidence, 0.5),
+    clarificationNeeded: true,
+    clarifyingQuestion: null,
+  };
+}
+
 function firstTwoSentences(text: string) {
   return (text.match(/[^.!?।]+[.!?।]?/g) ?? [text])
     .slice(0, 2)

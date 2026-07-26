@@ -5,6 +5,7 @@ import { getConceptPacket } from "@/lib/concepts/repository";
 import { getFallbackOutput } from "@/lib/demo/fallback";
 import { getServerEnv } from "@/lib/env";
 import {
+  boundMisconception,
   groundClarification,
   groundDiagnosis,
 } from "@/lib/recovery/validation";
@@ -105,20 +106,18 @@ export async function POST(request: Request) {
         diagnosis.error.flatten(),
       );
     }
-    if (
-      !packet.allowedMisconceptions.some(
-        ({ id }) => id === diagnosis.data.misconceptionId,
-      )
-    ) {
-      return apiError(
-        "MISCONCEPTION_OUT_OF_BOUNDS",
-        "The diagnosis was outside the verified concept packet.",
-        502,
+    if (chat.data.id) console.info(`Sarvam diagnosis request: ${chat.data.id}`);
+    const bounded = boundMisconception(
+      diagnosis.data,
+      packet.allowedMisconceptions.map(({ id }) => id),
+    );
+    if (bounded.misconceptionId !== diagnosis.data.misconceptionId) {
+      console.warn(
+        `Sarvam diagnosis outside concept packet; requesting clarification${chat.data.id ? `: ${chat.data.id}` : ""}`,
       );
     }
-    if (chat.data.id) console.info(`Sarvam diagnosis request: ${chat.data.id}`);
     const grounded = groundDiagnosis(
-      diagnosis.data,
+      bounded,
       packet,
       parsed.data.learnerName,
       parsed.data.turnType,

@@ -3,11 +3,42 @@ import test from "node:test";
 
 import type { Diagnosis } from "../types.ts";
 import {
+  boundMisconception,
   groundClarification,
   groundDiagnosis,
   needsClarificationTranscript,
   resolveSpokenOption,
 } from "./validation.ts";
+
+test("turns an out-of-packet model diagnosis into explicit uncertainty", () => {
+  const diagnosis = {
+    misconceptionId: "NUCLEUS_MAKES_ATP",
+    confidence: 0.92,
+    studentEvidence: ["nucleus controls everything"],
+    correctReasoningFragment: "The control-centre idea was remembered.",
+    divergencePoint: "Control was linked to ATP production.",
+    clarificationNeeded: false,
+    clarifyingQuestion: null,
+    spokenExplanation: "Repair.",
+    englishSubtitle: "Repair.",
+    verificationQuestion: "Transfer?",
+    expectedVerification: "B",
+    memoryUpdates: {
+      conceptId: "CELL_MITO_001",
+      masteryState: "misconception_detected",
+      latestCorrection: "Mitochondria produce ATP.",
+    },
+  } satisfies Diagnosis;
+
+  const bounded = boundMisconception(diagnosis, [
+    "CONTROL_EQUALS_EXECUTION",
+    "UNCERTAIN",
+  ]);
+
+  assert.equal(bounded.misconceptionId, "UNCERTAIN");
+  assert.equal(bounded.confidence, 0.5);
+  assert.equal(bounded.clarificationNeeded, true);
+});
 
 test("grounds deterministic diagnosis fields in the concept packet", () => {
   const packet = {
