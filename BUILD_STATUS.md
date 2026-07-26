@@ -1,11 +1,11 @@
 # Build status
 
 - Active milestone: 5 — Voice depth
-- Implemented: Voice-first mentor UI; one-tap conversational start; server-side Sarvam STT/TTS WebSocket relays; PCM16 browser capture and playback; provider VAD signals; interruption and barge-in; self-correction continuation; voice verification; English subtitles; REST recorder fallback; one bounded retry for transient Sarvam network/5xx failures; safe `UNCERTAIN` clarification for out-of-packet model diagnoses; existing recovery, memory, recall, and write-back flow
-- Working locally: Wrong answer invokes the voice mentor; diagnosis completes against live Sarvam; the conversation attempts streaming automatically and falls back to the stable REST recorder without losing the session when the local runtime cannot upgrade WebSockets
-- Verified: Fourteen focused tests; live Sarvam diagnosis returned 200; TypeScript; ESLint; production build; browser flow from wrong answer to voice start; 320px responsive check; fallback transition; no application console errors
-- Demo-ready: REST recovery remains demo-ready; streaming is guarded by `VOICE_STREAMING_ENABLED=false`
-- Current blocker: Vercel’s experimental WebSocket upgrade runtime is not emulated by local Next.js, so the relay requires a flagged preview deployment for live validation
-- Largest demo risk: Experimental Vercel upgrade behavior and Sarvam streaming wire compatibility on the production runtime
-- Next action: Redeploy the preview with the transient-provider retry, then complete one Android “No wait, actually…” interruption through verification and write-back
-- Cut features: Arbitrary open-domain mentor chat; a second relay service; custom VAD; streaming is automatically cut back to REST when unavailable
+- Implemented: Voice-first mentor UI; one-tap conversational start; standalone local Node STT/TTS relay; configurable external relay URL; relay origin checks, payload limits, and heartbeat cleanup; PCM16 browser capture and playback; provider VAD signals; interruption and barge-in; self-correction continuation; voice verification; English subtitles; REST recorder fallback; bounded Sarvam retry; safe `UNCERTAIN` clarification; existing recovery, memory, recall, and write-back flow
+- Working locally: Next.js on port 3000 connects to the Node relay on port 8787; the relay reaches live Sarvam STT and TTS without the Vercel request lifecycle
+- Verified: Fifteen focused tests; relay health; live STT `ready`; live TTS returned 12 audio chunks and completion; live diagnosis returned 200; ESLint; production build; browser recovery startup and safe microphone fallback
+- Demo-ready: REST recovery remains demo-ready; local streaming is ready when `VOICE_STREAMING_ENABLED=true` and `NEXT_PUBLIC_VOICE_RELAY_URL=ws://127.0.0.1:8787`
+- Current blocker: The automated in-app browser cannot grant usable microphone capture; complete the final spoken pass in local Chrome
+- Largest demo risk: An HTTPS-hosted frontend requires a separately hosted `wss://` relay; the loopback relay is intentionally local-only
+- Next action: Open local Chrome, allow the microphone, and complete one “No wait, actually…” interruption through verification and write-back
+- Cut features: Arbitrary open-domain mentor chat; custom VAD; the experimental Vercel relay is no longer required for the local demo
