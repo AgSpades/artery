@@ -15,7 +15,9 @@ const responseSchema = z.object({
 });
 
 export async function POST(request: Request) {
-  const parsed = requestSchema.safeParse(await request.json().catch(() => null));
+  const parsed = requestSchema.safeParse(
+    await request.json().catch(() => null),
+  );
   if (!parsed.success) {
     return apiError(
       "VALIDATION_ERROR",
@@ -41,7 +43,7 @@ export async function POST(request: Request) {
         text: parsed.data.text,
         target_language_code: parsed.data.languageCode,
         model: "bulbul:v3",
-        speaker: "priya",
+        speaker: "ishita",
         pace: 1,
         speech_sample_rate: 24_000,
         output_audio_codec: "wav",
