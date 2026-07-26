@@ -11,6 +11,7 @@ import { sarvamFetch, SarvamProviderError } from "@/lib/sarvam/client";
 
 const requestSchema = z.strictObject({
   transcript: z.string().min(1),
+  learnerName: z.string().trim().min(1).max(80),
   context: hostRecoveryRequestSchema,
 });
 
@@ -41,6 +42,7 @@ export async function POST(request: Request) {
 
   const prompt = {
     transcript: parsed.data.transcript,
+    learnerName: parsed.data.learnerName,
     learnerAnswer: parsed.data.context.learnerAnswer,
     correctAnswer: packet.correctOption,
     allowedMisconceptions: packet.allowedMisconceptions,
@@ -61,8 +63,7 @@ export async function POST(request: Request) {
         messages: [
           {
             role: "system",
-            content:
-              "Return only the requested JSON. Diagnose only from the supplied concept packet. Copy misconceptionId verbatim from allowedMisconceptions; never shorten or invent an ID. Reference the learner's words, identify partial correctness, speak Hindi-first with English Biology terminology, provide a faithful English subtitle, and keep masteryState as misconception_detected before verification.",
+            content: `Return only the requested JSON. Diagnose only from the supplied concept packet. Copy misconceptionId verbatim from allowedMisconceptions; never shorten or invent an ID. spokenExplanation must contain exactly 2 short Romanized Hindi sentences and begin exactly "${parsed.data.learnerName}, tumne". Use English only for Biology terms. First affirm one remembered idea, then repair only the crossed distinction. Never say learner, they, unhone, answer, correct, incorrect, option letters, or list facts. englishSubtitle must translate those 2 sentences using English grammar only; never copy Hindi words such as tumne, lekin, hai, hain, or karte. Keep masteryState as misconception_detected before verification.`,
           },
           { role: "user", content: JSON.stringify(prompt) },
         ],

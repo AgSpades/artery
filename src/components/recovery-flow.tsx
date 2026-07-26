@@ -15,7 +15,11 @@ import { z } from "zod";
 import { ExplanationPlayer } from "@/components/explanation-player";
 import { RecoveryTimeline } from "@/components/recovery-timeline";
 import { VoiceRecorder } from "@/components/voice-recorder";
-import { loadActiveSession, saveWriteback } from "@/lib/memory/storage";
+import {
+  loadActiveSession,
+  loadMemory,
+  saveWriteback,
+} from "@/lib/memory/storage";
 import { useClientReady } from "@/lib/memory/use-client-ready";
 import {
   initialRecoveryState,
@@ -76,6 +80,7 @@ export function RecoveryFlow({
   const [lastAudio, setLastAudio] = useState<Blob>();
   const isClient = useClientReady();
   const stored = isClient ? loadActiveSession(sessionId) : undefined;
+  const learnerName = isClient ? loadMemory().learner.name : "Learner";
   const parsedContext = hostRecoveryRequestSchema.safeParse(stored?.context);
   const activeContext = parsedContext.success ? parsedContext.data : undefined;
 
@@ -108,7 +113,7 @@ export function RecoveryFlow({
       const response = await fetch("/api/diagnose", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ transcript, context: activeContext }),
+        body: JSON.stringify({ transcript, learnerName, context: activeContext }),
       });
       const payload = diagnosisResponseSchema.safeParse(await response.json());
       if (!response.ok || !payload.success) throw new Error("Diagnosis failed.");
@@ -227,7 +232,9 @@ export function RecoveryFlow({
       )}
       <div className="mb-6">
         <p className="text-sm font-medium text-[#8f1838]">Artery recovery session</p>
-        <h1 className="mt-1 text-3xl font-semibold tracking-tight">Let’s trace the reasoning</h1>
+        <h1 className="mt-1 text-3xl font-semibold tracking-tight">
+          Let’s trace the reasoning, {learnerName}
+        </h1>
       </div>
       <RecoveryTimeline current={stageNumber(state.stage)} />
 
@@ -245,7 +252,9 @@ export function RecoveryFlow({
           {(state.stage === "idle" || state.stage === "recording") && (
             <>
               <p className="text-sm font-semibold text-[#8f1838]">Stage 1 · Listen</p>
-              <h2 className="mt-2 text-2xl font-semibold">Why did you choose that answer?</h2>
+              <h2 className="mt-2 text-2xl font-semibold">
+                {learnerName}, what made that answer feel right?
+              </h2>
               <p className="mt-3 max-w-2xl leading-7 text-stone-600">
                 Tell me what you remembered and how you connected it. Hesitation,
                 Hindi-English switching, and self-correction are all fine.
@@ -304,7 +313,12 @@ export function RecoveryFlow({
           )}
 
           {state.stage === "explaining" && state.diagnosis && (
-            <DiagnosisAndExplanation diagnosis={state.diagnosis} onContinue={() => dispatch({ type: "AWAIT_VERIFICATION" })} />
+            <DiagnosisAndExplanation
+              diagnosis={state.diagnosis}
+              learnerName={learnerName}
+              onContinue={() => dispatch({ type: "AWAIT_VERIFICATION" })}
+              transcript={state.transcript}
+            />
           )}
 
           {state.stage === "retry_explanation" && state.diagnosis && (
@@ -377,41 +391,76 @@ function Progress({ title, copy }: { title: string; copy: string }) {
 
 function DiagnosisAndExplanation({
   diagnosis,
+  learnerName,
   onContinue,
+  transcript,
 }: {
   diagnosis: z.infer<typeof diagnosisSchema>;
+  learnerName: string;
   onContinue: () => void;
+  transcript: string;
 }) {
   return (
     <>
       <p className="text-sm font-semibold text-[#8f1838]">Stages 2–3 · Diagnose and repair</p>
-      <h2 className="mt-2 text-2xl font-semibold">The reasoning changed at one precise point</h2>
-      <div className="mt-6 grid gap-4 sm:grid-cols-2">
-        <div className="border border-stone-200 p-4">
-          <h3 className="font-semibold">What you understood correctly</h3>
-          <p className="mt-2 text-sm leading-6 text-stone-600">{diagnosis.correctReasoningFragment}</p>
-        </div>
-        <div className="border border-[#d9a6b3] bg-[#fbf0f2] p-4">
-          <h3 className="font-semibold">Where the reasoning diverged</h3>
-          <p className="mt-2 text-sm leading-6 text-stone-700">{diagnosis.divergencePoint}</p>
-        </div>
-      </div>
-      <div className="mt-5 border-t border-stone-200 pt-5">
-        <h3 className="font-semibold">Evidence from your explanation</h3>
-        <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-stone-600">
-          {diagnosis.studentEvidence.map((evidence) => <li key={evidence}>“{evidence}”</li>)}
-        </ul>
-      </div>
-      <div className="mt-5 bg-stone-900 p-5 text-white">
-        <h3 className="font-semibold">Bilingual explanation</h3>
-        <ExplanationPlayer text={diagnosis.spokenExplanation} />
-        <p className="mt-3 leading-7" lang="hi">{diagnosis.spokenExplanation}</p>
-        <p className="mt-4 border-t border-stone-700 pt-4 text-sm leading-6 text-stone-300">
-          <strong className="text-white">English subtitle:</strong> {diagnosis.englishSubtitle}
+      <h2 className="mt-2 max-w-2xl text-2xl font-semibold">
+        {learnerName}, you had the right fact. One connection got crossed.
+      </h2>
+
+      <div className="mt-6 border-l-4 border-stone-300 pl-4">
+        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-stone-500">
+          You were right about
+        </p>
+        <p className="mt-2 leading-7 text-stone-700">
+          {diagnosis.correctReasoningFragment}
         </p>
       </div>
-      <button className="mt-5 inline-flex items-center gap-2 bg-[#8f1838] px-5 py-3 font-medium text-white" onClick={onContinue} type="button">
-        Verify understanding <ArrowRight aria-hidden="true" size={18} />
+
+      <div className="mt-5 border border-[#d9a6b3] bg-[#fbf0f2] p-4">
+        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#8f1838]">
+          The one switch
+        </p>
+        <p className="mt-2 leading-7 text-stone-800">{diagnosis.divergencePoint}</p>
+      </div>
+
+      <div className="mt-5 bg-stone-900 p-5 text-white">
+        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-stone-400">
+          Artery’s reply to {learnerName}
+        </p>
+        <h3 className="mt-2 text-lg font-semibold">Listen to the distinction</h3>
+        <ExplanationPlayer text={diagnosis.spokenExplanation} />
+        <p className="mt-4 max-w-2xl leading-7" lang="hi-IN">
+          {diagnosis.spokenExplanation}
+        </p>
+        <p className="mt-4 max-w-2xl border-t border-stone-700 pt-4 text-sm leading-6 text-stone-300">
+          <strong className="text-white">English subtitle</strong><br />
+          {diagnosis.englishSubtitle}
+        </p>
+      </div>
+
+      <details className="mt-5 border-y border-stone-200 py-4">
+        <summary className="cursor-pointer font-medium text-stone-700">
+          See what I heard in your reasoning
+        </summary>
+        <div className="mt-4 space-y-4 text-sm leading-6 text-stone-600">
+          <div>
+            <p className="font-medium text-stone-800">Your full transcript</p>
+            <p className="mt-1">{transcript}</p>
+          </div>
+          <div>
+            <p className="font-medium text-stone-800">Evidence used</p>
+            <ul className="mt-1 list-disc space-y-1 pl-5">
+              {diagnosis.studentEvidence.map((evidence) => (
+                <li key={evidence}>“{evidence}”</li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </details>
+
+      <p className="mt-5 font-medium">Ready to try the idea in a new situation?</p>
+      <button className="mt-3 inline-flex items-center gap-2 bg-[#8f1838] px-5 py-3 font-medium text-white" onClick={onContinue} type="button">
+        Give me a quick check <ArrowRight aria-hidden="true" size={18} />
       </button>
     </>
   );

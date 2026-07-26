@@ -2,15 +2,36 @@ import { z } from "zod";
 
 import type { Diagnosis } from "@/lib/types";
 
+function firstTwoSentences(text: string) {
+  return (text.match(/[^.!?।]+[.!?।]?/g) ?? [text])
+    .slice(0, 2)
+    .map((sentence) => sentence.trim())
+    .join(" ")
+    .trim();
+}
+
+function hasHindiConnectors(text: string) {
+  return /\b(?:aap|aapne|bas|hai|hain|ka|karte|karta|kiya|ko|lekin|mein|tha|thi|tum|tumhara|tumne|yaad)\b/i.test(
+    text,
+  );
+}
+
 export function groundDiagnosis(
   diagnosis: Diagnosis,
   packet: {
     id: string;
     transferQuestion: { question: string; correctOption: string };
+    recallCard: { back: string };
   },
 ): Diagnosis {
   return {
     ...diagnosis,
+    spokenExplanation: firstTwoSentences(diagnosis.spokenExplanation),
+    englishSubtitle: firstTwoSentences(
+      hasHindiConnectors(diagnosis.englishSubtitle)
+        ? packet.recallCard.back
+        : diagnosis.englishSubtitle,
+    ),
     verificationQuestion: packet.transferQuestion.question,
     expectedVerification: packet.transferQuestion.correctOption,
     memoryUpdates: {

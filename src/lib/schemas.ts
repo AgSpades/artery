@@ -57,19 +57,19 @@ export const recoveryWritebackSchema = z.strictObject({
 export const diagnosisSchema = z.strictObject({
   misconceptionId: z.string().min(1),
   confidence: z.number().min(0).max(1),
-  studentEvidence: z.array(z.string().min(1)).min(1).max(3),
-  correctReasoningFragment: z.string().min(1),
-  divergencePoint: z.string().min(1),
+  studentEvidence: z.array(z.string().min(1).max(220)).min(1).max(3),
+  correctReasoningFragment: z.string().min(1).max(220),
+  divergencePoint: z.string().min(1).max(260),
   clarificationNeeded: z.boolean(),
   clarifyingQuestion: z.string().min(1).nullable(),
-  spokenExplanation: z.string().min(1).max(900),
-  englishSubtitle: z.string().min(1).max(900),
-  verificationQuestion: z.string().min(1),
-  expectedVerification: z.string().min(1),
+  spokenExplanation: z.string().min(1).max(360),
+  englishSubtitle: z.string().min(1).max(320),
+  verificationQuestion: z.string().min(1).max(300),
+  expectedVerification: z.string().min(1).max(10),
   memoryUpdates: z.strictObject({
     conceptId: z.string().min(1),
     masteryState: masteryStateSchema,
-    latestCorrection: z.string().min(1),
+    latestCorrection: z.string().min(1).max(220),
   }),
 });
 

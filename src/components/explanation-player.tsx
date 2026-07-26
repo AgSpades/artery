@@ -48,7 +48,7 @@ export function ExplanationPlayer({ text }: { text: string }) {
           type="button"
         >
           {isLoading ? <RefreshCw aria-hidden="true" className="animate-spin" size={16} /> : <Play aria-hidden="true" size={16} />}
-          {isLoading ? "Generating audio…" : "Play bilingual audio"}
+          {isLoading ? "Preparing Artery’s reply…" : "Hear Artery’s reply"}
         </button>
       )}
       {error && (
