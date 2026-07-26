@@ -9,6 +9,10 @@ const envSchema = z.object({
     .enum(["true", "false"])
     .default("false")
     .transform((value) => value === "true"),
+  VOICE_STREAMING_ENABLED: z
+    .enum(["true", "false"])
+    .default("false")
+    .transform((value) => value === "true"),
 });
 
 export function getServerEnv() {
@@ -16,6 +20,7 @@ export function getServerEnv() {
     SARVAM_API_KEY: process.env.SARVAM_API_KEY || undefined,
     SARVAM_BASE_URL: process.env.SARVAM_BASE_URL,
     DEMO_FALLBACK_MODE: process.env.DEMO_FALLBACK_MODE,
+    VOICE_STREAMING_ENABLED: process.env.VOICE_STREAMING_ENABLED,
   });
 }
 

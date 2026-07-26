@@ -4,7 +4,11 @@ import { apiError } from "@/lib/api";
 import { getConceptPacket } from "@/lib/concepts/repository";
 import { getFallbackOutput } from "@/lib/demo/fallback";
 import { getServerEnv } from "@/lib/env";
-import { groundDiagnosis } from "@/lib/recovery/validation";
+import {
+  boundMisconception,
+  groundClarification,
+  groundDiagnosis,
+} from "@/lib/recovery/validation";
 import { diagnosisSchema, hostRecoveryRequestSchema } from "@/lib/schemas";
 import { parseChatResponse } from "@/lib/sarvam/chat";
 import { sarvamFetch, SarvamProviderError } from "@/lib/sarvam/client";
@@ -13,6 +17,10 @@ const requestSchema = z.strictObject({
   transcript: z.string().min(1),
   learnerName: z.string().trim().min(1).max(80),
   context: hostRecoveryRequestSchema,
+  turnType: z
+    .enum(["initial_reasoning", "clarification", "self_correction"])
+    .default("initial_reasoning"),
+  latestTurn: z.string().trim().min(1).max(2_000).optional(),
 });
 
 export async function POST(request: Request) {
@@ -42,6 +50,8 @@ export async function POST(request: Request) {
 
   const prompt = {
     transcript: parsed.data.transcript,
+    latestTurn: parsed.data.latestTurn,
+    turnType: parsed.data.turnType,
     learnerName: parsed.data.learnerName,
     learnerAnswer: parsed.data.context.learnerAnswer,
     correctAnswer: packet.correctOption,
@@ -63,7 +73,7 @@ export async function POST(request: Request) {
         messages: [
           {
             role: "system",
-            content: `Return only the requested JSON. Diagnose only from the supplied concept packet. Copy misconceptionId verbatim from allowedMisconceptions; never shorten or invent an ID. spokenExplanation must contain exactly 2 short Romanized Hindi sentences and begin exactly "${parsed.data.learnerName}, tumne". Use English only for Biology terms. First affirm one remembered idea, then repair only the crossed distinction. Never say learner, they, unhone, answer, correct, incorrect, option letters, or list facts. englishSubtitle must translate those 2 sentences using English grammar only; never copy Hindi words such as tumne, lekin, hai, hain, or karte. Keep masteryState as misconception_detected before verification.`,
+            content: `Return only the requested JSON. Diagnose only from the supplied concept packet. Copy misconceptionId verbatim from allowedMisconceptions; never shorten or invent an ID. The latestTurn is the learner's current belief; when turnType is self_correction, let it supersede the earlier claim and acknowledge what changed. spokenExplanation must contain exactly 2 short Romanized Hindi sentences and begin exactly "${parsed.data.learnerName}, tumne". Use English only for Biology terms. First affirm one remembered idea, then repair only the crossed distinction. Never say learner, they, unhone, answer, correct, incorrect, option letters, or list facts. englishSubtitle must translate those 2 sentences using English grammar only; never copy Hindi words such as tumne, lekin, hai, hain, or karte. Keep masteryState as misconception_detected before verification.`,
           },
           { role: "user", content: JSON.stringify(prompt) },
         ],
@@ -96,19 +106,30 @@ export async function POST(request: Request) {
         diagnosis.error.flatten(),
       );
     }
-    if (
-      !packet.allowedMisconceptions.some(
-        ({ id }) => id === diagnosis.data.misconceptionId,
-      )
-    ) {
-      return apiError(
-        "MISCONCEPTION_OUT_OF_BOUNDS",
-        "The diagnosis was outside the verified concept packet.",
-        502,
+    if (chat.data.id) console.info(`Sarvam diagnosis request: ${chat.data.id}`);
+    const bounded = boundMisconception(
+      diagnosis.data,
+      packet.allowedMisconceptions.map(({ id }) => id),
+    );
+    if (bounded.misconceptionId !== diagnosis.data.misconceptionId) {
+      console.warn(
+        `Sarvam diagnosis outside concept packet; requesting clarification${chat.data.id ? `: ${chat.data.id}` : ""}`,
       );
     }
-    if (chat.data.id) console.info(`Sarvam diagnosis request: ${chat.data.id}`);
-    return Response.json({ diagnosis: groundDiagnosis(diagnosis.data, packet) });
+    const grounded = groundDiagnosis(
+      bounded,
+      packet,
+      parsed.data.learnerName,
+      parsed.data.turnType,
+    );
+    return Response.json({
+      diagnosis: groundClarification(
+        grounded,
+        packet,
+        parsed.data.learnerName,
+        parsed.data.transcript,
+      ),
+    });
   } catch (error) {
     if (error instanceof SyntaxError) {
       return apiError(

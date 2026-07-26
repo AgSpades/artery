@@ -1,11 +1,11 @@
 # Build status
 
-- Active milestone: 2 — TTS and voice quality
-- Implemented: Foundation; host session creation; MediaRecorder; Sarvam STT, structured diagnosis, and TTS adapters; concise two-sentence repair contract; personal learner address; English subtitle grounding; progressive transcript evidence; reducer state machine; deterministic verification; recall scheduling; localStorage memory; host write-back; history; labelled fallback mode
-- Working locally: Live named Hindi-English diagnosis to browser-playable TTS; complete fallback flow from wrong answer through host mastery update and persisted history
-- Verified: Six tests; ESLint; production build; live health response; live TTS-to-STT round trip; live named diagnosis-to-TTS; parameterized MediaRecorder MIME forwarding; production-browser conversational repair state; history after reload; 320px no-overflow check; clean browser console
-- Demo-ready: Yes, in visibly labelled fallback mode
-- Current blocker: None in the REST voice path; a real microphone-to-playback browser pass still needs manual permission and speech
-- Largest demo risk: Provider wording varies, bounded by the two-sentence ceiling and concept-grounded English fallback
-- Next action: Deploy Milestone 2, then run one manual microphone-to-playback session in production
-- Cut features: Streaming, VAD, barge-in, public developer portal
+- Active milestone: 5 — Voice depth
+- Implemented: Voice-first mentor UI; one-tap conversational start; one-command local voice launcher; standalone local Node STT/TTS relay; standalone Vercel Node Function relay project; configurable external relay URL; relay origin checks, payload limits, and heartbeat cleanup; PCM16 browser capture and playback; provider VAD signals; interruption and barge-in; self-correction continuation; voice verification; English subtitles; REST recorder fallback; bounded Sarvam retry; safe `UNCERTAIN` clarification; existing recovery, memory, recall, and write-back flow
+- Working locally: `npm run dev:voice` starts Next.js on port 3000 and the Node relay on port 8787 with live voice enabled and fallback mode disabled
+- Verified: Sixteen app tests; two isolated relay tests; relay TypeScript build; zero relay production dependency vulnerabilities; one-command launcher health; relay health; live STT `ready`; live TTS returned 12 audio chunks and completion; live diagnosis returned 200; ESLint; production build; browser recovery startup and safe microphone fallback
+- Demo-ready: REST recovery remains demo-ready; local streaming is available through `npm run dev:voice`
+- Current blocker: The automated in-app browser cannot grant usable microphone capture; complete the final spoken pass in local Chrome
+- Largest demo risk: Vercel WebSocket upgrades are experimental and connections remain bounded by function duration; completed turns are preserved by the REST fallback
+- Next action: Deploy `voice-relay` as a second Vercel project, set the main app relay URL, then complete one production “No wait, actually…” interruption through verification and write-back
+- Cut features: Arbitrary open-domain mentor chat; custom VAD; the experimental Vercel relay is no longer required for the local demo

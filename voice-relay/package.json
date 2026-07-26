@@ -1,0 +1,23 @@
+{
+  "name": "artery-voice-relay",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=20.9"
+  },
+  "scripts": {
+    "build": "tsc --noEmit",
+    "test": "node --test lib/relay.test.ts"
+  },
+  "dependencies": {
+    "@vercel/functions": "^3.7.6",
+    "ws": "^8.21.1",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "@types/ws": "^8.18.1",
+    "typescript": "^5"
+  }
+}

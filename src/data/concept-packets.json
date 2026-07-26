@@ -38,7 +38,11 @@
       "recallCard": {
         "front": "Control centre vs energy-production site: which organelle does each job?",
         "back": "Nucleus regulates cellular activity; mitochondria perform aerobic respiration and produce ATP."
-      }
+      },
+      "spokenRepair": "Nucleus cell ka control centre hai, lekin control karna aur process ka actual site hona alag baat hai. Aerobic respiration aur ATP production mitochondria mein hoti hai.",
+      "clarifyingQuestion": "Kya tumhe laga control centre har process khud karta hai, ya 'powerhouse' term yaad tha but ATP link miss hua?",
+      "clarifyingQuestionEnglish": "Did you think the control centre performs every process, or did you miss the ATP link to the powerhouse?",
+      "spokenVerificationQuestion": "Ek cell ko continuously bahut ATP chahiye. Kaunsa organelle zyada abundant hoga?"
     },
     {
       "id": "CELL_OSMOSIS_002",
@@ -76,7 +80,11 @@
       "recallCard": {
         "front": "What makes osmosis different from ordinary diffusion?",
         "back": "Osmosis is the diffusion of water across a selectively permeable membrane."
-      }
+      },
+      "spokenRepair": "High se low movement diffusion ka general idea hai. Osmosis specifically water ka diffusion hai, aur selectively permeable membrane ke across hota hai.",
+      "clarifyingQuestion": "Kya tum har high-to-low movement ko osmosis keh rahi thi, ya water yaad tha but selective membrane condition miss hui?",
+      "clarifyingQuestionEnglish": "Did you call every high-to-low movement osmosis, or remember water but miss the selectively permeable membrane?",
+      "spokenVerificationQuestion": "Membrane water ko pass karti hai, sugar ko nahi. Water higher sugar concentration ki taraf jaata hai. Yeh kaunsa process hai?"
     },
     {
       "id": "CELL_PROTEIN_003",
@@ -114,7 +122,11 @@
       "recallCard": {
         "front": "Ribosome and Golgi: what is the key difference?",
         "back": "Ribosome synthesizes protein; Golgi modifies, sorts, and packages material."
-      }
+      },
+      "spokenRepair": "Golgi proteins ko modify, sort aur package karta hai. Protein synthesis ka actual step ribosome karta hai by translating mRNA.",
+      "clarifyingQuestion": "Kya tumhe laga protein ko handle karna hi protein banana hai, ya ribosome–ER–Golgi sequence confuse hua?",
+      "clarifyingQuestionEnglish": "Did handling proteins seem the same as making them, or was the ribosome–ER–Golgi sequence unclear?",
+      "spokenVerificationQuestion": "mRNA template se protein ban raha hai. Production step kaunsa structure karta hai?"
     },
     {
       "id": "CELL_TRANSPORT_004",
@@ -153,7 +165,11 @@
       "recallCard": {
         "front": "What two clues identify active transport?",
         "back": "Movement against the concentration gradient and use of cellular energy, usually ATP."
-      }
+      },
+      "spokenRepair": "Passive transport gradient ke saath hota hai aur energy nahi leta. Active transport gradient ke against hota hai aur ATP use karta hai.",
+      "clarifyingQuestion": "Kya tumne har particle movement ko diffusion maana, ya gradient direction aur ATP clue miss hua?",
+      "clarifyingQuestionEnglish": "Did every particle movement seem like diffusion, or did you miss the gradient direction and ATP clue?",
+      "spokenVerificationQuestion": "Pump ion ko low se high concentration le ja raha hai. Kya zaroori hoga?"
     }
   ]
 }

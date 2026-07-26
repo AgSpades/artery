@@ -2,6 +2,20 @@ import { z } from "zod";
 
 import type { Diagnosis } from "@/lib/types";
 
+export function boundMisconception(
+  diagnosis: Diagnosis,
+  allowedIds: string[],
+): Diagnosis {
+  if (allowedIds.includes(diagnosis.misconceptionId)) return diagnosis;
+  return {
+    ...diagnosis,
+    misconceptionId: "UNCERTAIN",
+    confidence: Math.min(diagnosis.confidence, 0.5),
+    clarificationNeeded: true,
+    clarifyingQuestion: null,
+  };
+}
+
 function firstTwoSentences(text: string) {
   return (text.match(/[^.!?।]+[.!?।]?/g) ?? [text])
     .slice(0, 2)
@@ -10,10 +24,42 @@ function firstTwoSentences(text: string) {
     .trim();
 }
 
-function hasHindiConnectors(text: string) {
-  return /\b(?:aap|aapne|bas|hai|hain|ka|karte|karta|kiya|ko|lekin|mein|tha|thi|tum|tumhara|tumne|yaad)\b/i.test(
-    text,
+export function needsClarificationTranscript(transcript: string) {
+  const latestAnswer = transcript.split(/\nclarification:\s*/i).at(-1) ?? transcript;
+  const normalized = latestAnswer.trim().toLowerCase();
+  // ponytail: demo-only uncertainty cues; replace with calibrated confidence when repeated proof expands.
+  return (
+    normalized.split(/\s+/).length < 5 ||
+    /\b(?:don't remember|guess(?:ed)?|no idea|not sure|pata nahi|yaad nahi)\b/.test(
+      normalized,
+    )
   );
+}
+
+export function groundClarification(
+  diagnosis: Diagnosis,
+  packet: { clarifyingQuestion: string },
+  learnerName: string,
+  transcript: string,
+): Diagnosis {
+  if (
+    diagnosis.misconceptionId !== "UNCERTAIN" &&
+    !needsClarificationTranscript(transcript)
+  ) {
+    return {
+      ...diagnosis,
+      clarificationNeeded: false,
+      clarifyingQuestion: null,
+    };
+  }
+
+  return {
+    ...diagnosis,
+    misconceptionId: "UNCERTAIN",
+    confidence: Math.min(diagnosis.confidence, 0.5),
+    clarificationNeeded: true,
+    clarifyingQuestion: `${learnerName}, ${packet.clarifyingQuestion}`,
+  };
 }
 
 export function groundDiagnosis(
@@ -22,16 +68,25 @@ export function groundDiagnosis(
     id: string;
     transferQuestion: { question: string; correctOption: string };
     recallCard: { back: string };
+    spokenRepair: string;
   },
+  learnerName: string,
+  turnType:
+    | "initial_reasoning"
+    | "clarification"
+    | "self_correction" = "initial_reasoning",
 ): Diagnosis {
+  const selfCorrection = turnType === "self_correction";
   return {
     ...diagnosis,
-    spokenExplanation: firstTwoSentences(diagnosis.spokenExplanation),
-    englishSubtitle: firstTwoSentences(
-      hasHindiConnectors(diagnosis.englishSubtitle)
-        ? packet.recallCard.back
-        : diagnosis.englishSubtitle,
+    spokenExplanation: firstTwoSentences(
+      selfCorrection
+        ? `${learnerName}, yes—ab tumne distinction pakad liya. ${packet.spokenRepair}`
+        : `${learnerName}, ${packet.spokenRepair}`,
     ),
+    englishSubtitle: selfCorrection
+      ? `That correction captures the distinction, ${learnerName}. ${packet.recallCard.back}`
+      : packet.recallCard.back,
     verificationQuestion: packet.transferQuestion.question,
     expectedVerification: packet.transferQuestion.correctOption,
     memoryUpdates: {
@@ -48,6 +103,29 @@ export function nextReviewAt(intervalDays: number, now = new Date()) {
 
 export function matchesExpectedAnswer(answer: string, expected: string) {
   return answer.trim().toUpperCase() === expected.trim().toUpperCase();
+}
+
+export function resolveSpokenOption(
+  answer: string,
+  options: Array<{ id: string; text: string }>,
+) {
+  const explicit =
+    answer.match(/^\s*([A-D])(?:[,.):;-]|$)/i)?.[1] ??
+    answer.match(/\boption\s+([A-D])\b/i)?.[1];
+  if (explicit && options.some(({ id }) => id === explicit.toUpperCase())) {
+    return explicit.toUpperCase();
+  }
+
+  const normalized = answer
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}]+/gu, " ")
+    .trim();
+  const matches = options.filter(({ text }) =>
+    normalized.includes(
+      text.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, " ").trim(),
+    ),
+  );
+  return matches.length === 1 ? matches[0].id : null;
 }
 
 export const verificationRequestSchema = z.strictObject({

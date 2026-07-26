@@ -9,5 +9,6 @@ export function GET() {
     conceptPackets: conceptPackets.length,
     sarvamConfigured: Boolean(env.SARVAM_API_KEY),
     fallbackMode: env.DEMO_FALLBACK_MODE,
+    voiceStreamingEnabled: env.VOICE_STREAMING_ENABLED,
   });
 }

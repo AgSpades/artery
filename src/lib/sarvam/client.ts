@@ -1,6 +1,7 @@
 import "server-only";
 
 import { requireSarvamKey } from "@/lib/env";
+import { shouldRetrySarvam } from "@/lib/sarvam/retry";
 
 export class SarvamProviderError extends Error {
   constructor(
@@ -29,49 +30,70 @@ export async function sarvamFetch(
     );
   }
 
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
 
-  try {
-    const response = await fetch(`${env.SARVAM_BASE_URL}${path}`, {
-      ...init,
-      headers: {
-        "api-subscription-key": env.SARVAM_API_KEY,
-        ...init.headers,
-      },
-      signal: controller.signal,
-    });
+    try {
+      const response = await fetch(`${env.SARVAM_BASE_URL}${path}`, {
+        ...init,
+        headers: {
+          "api-subscription-key": env.SARVAM_API_KEY,
+          ...init.headers,
+        },
+        signal: controller.signal,
+      });
 
-    if (!response.ok) {
+      if (response.ok) return response;
+
       const body = (await response.json().catch(() => null)) as
         | { error?: { message?: string; code?: string; request_id?: string } }
         | null;
       const requestId =
         body?.error?.request_id ?? response.headers.get("x-request-id") ?? undefined;
-      if (requestId) console.error(`Sarvam request failed: ${requestId}`);
+      if (shouldRetrySarvam(response.status, attempt)) {
+        console.warn(
+          `Sarvam transient failure; retrying${requestId ? `: ${requestId}` : ""}`,
+        );
+        continue;
+      }
+      console.error(
+        `Sarvam request failed after retry: ${response.status}${requestId ? ` ${requestId}` : ""}`,
+      );
       throw new SarvamProviderError(
         body?.error?.message ?? "Sarvam request failed.",
         response.status,
         body?.error?.code ?? "SARVAM_PROVIDER_ERROR",
         requestId,
       );
-    }
-    return response;
-  } catch (error) {
-    if (error instanceof SarvamProviderError) throw error;
-    if (error instanceof Error && error.name === "AbortError") {
+    } catch (error) {
+      if (error instanceof SarvamProviderError) throw error;
+      if (error instanceof Error && error.name === "AbortError") {
+        console.error("Sarvam request timed out.");
+        throw new SarvamProviderError(
+          "Sarvam did not respond in time. Your progress is safe.",
+          504,
+          "SARVAM_TIMEOUT",
+        );
+      }
+      if (shouldRetrySarvam(undefined, attempt)) {
+        console.warn("Sarvam network failure; retrying once.");
+        continue;
+      }
+      console.error("Sarvam network failure after retry.");
       throw new SarvamProviderError(
-        "Sarvam did not respond in time. Your progress is safe.",
-        504,
-        "SARVAM_TIMEOUT",
+        "Could not reach Sarvam. Your progress is safe.",
+        502,
+        "SARVAM_NETWORK_ERROR",
       );
+    } finally {
+      clearTimeout(timer);
     }
-    throw new SarvamProviderError(
-      "Could not reach Sarvam. Your progress is safe.",
-      502,
-      "SARVAM_NETWORK_ERROR",
-    );
-  } finally {
-    clearTimeout(timer);
   }
+
+  throw new SarvamProviderError(
+    "Could not reach Sarvam. Your progress is safe.",
+    502,
+    "SARVAM_NETWORK_ERROR",
+  );
 }
