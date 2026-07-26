@@ -3,6 +3,7 @@ import { z } from "zod";
 import { apiError } from "@/lib/api";
 import { getFallbackOutput } from "@/lib/demo/fallback";
 import { getServerEnv } from "@/lib/env";
+import { isSupportedAudioType, normalizeAudioType } from "@/lib/sarvam/audio";
 import { sarvamFetch, SarvamProviderError } from "@/lib/sarvam/client";
 
 const sttResponseSchema = z.object({
@@ -10,17 +11,6 @@ const sttResponseSchema = z.object({
   language_code: z.string().optional(),
   request_id: z.string().optional(),
 });
-
-const audioTypes = new Set([
-  "audio/aac",
-  "audio/flac",
-  "audio/mp4",
-  "audio/mpeg",
-  "audio/ogg",
-  "audio/wav",
-  "audio/webm",
-  "video/webm",
-]);
 
 export async function POST(request: Request) {
   const form = await request.formData().catch(() => null);
@@ -30,7 +20,7 @@ export async function POST(request: Request) {
   if (!(audio instanceof File) || audio.size === 0) {
     return apiError("MISSING_AUDIO", "Record an explanation before continuing.", 400);
   }
-  if (!audioTypes.has(audio.type)) {
+  if (!isSupportedAudioType(audio.type)) {
     return apiError(
       "UNSUPPORTED_AUDIO",
       "Use WebM, OGG, WAV, MP3, MP4, AAC, or FLAC audio.",
@@ -51,7 +41,11 @@ export async function POST(request: Request) {
   }
 
   const providerForm = new FormData();
-  providerForm.append("file", audio);
+  providerForm.append(
+    "file",
+    new Blob([audio], { type: normalizeAudioType(audio.type) }),
+    audio.name,
+  );
   providerForm.append("model", "saaras:v3");
   providerForm.append("mode", "codemix");
   providerForm.append("language_code", "hi-IN");
