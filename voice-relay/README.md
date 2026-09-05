@@ -22,13 +22,13 @@ Deploy, then configure the main Artery Vercel project:
 
 ```env
 VOICE_STREAMING_ENABLED=true
-NEXT_PUBLIC_VOICE_RELAY_URL=wss://your-relay.vercel.app/api
+NEXT_PUBLIC_VOICE_RELAY_URL=wss://your-relay.vercel.app
 ```
 
 Redeploy the main app because `NEXT_PUBLIC_VOICE_RELAY_URL` is included at build
-time. Verify `https://your-relay.vercel.app/api/health` returns `200`.
+time. Verify `https://your-relay.vercel.app/health` returns `200`.
 
-The browser connects to `/api/stt` and `/api/tts`. Origins are exact matches;
+The browser connects to `/stt` and `/tts`. Origins are exact matches;
 add preview URLs explicitly when testing preview deployments.
 
 ## Run locally
