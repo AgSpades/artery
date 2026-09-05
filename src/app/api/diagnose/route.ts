@@ -66,7 +66,7 @@ export async function POST(request: Request) {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: "sarvam-30b",
+        model: "sarvam-105b",
         temperature: 0.1,
         reasoning_effort: null,
         max_tokens: 1800,
